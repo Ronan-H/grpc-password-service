@@ -7,6 +7,7 @@ import io.grpc.stub.StreamObserver;
 import ronan_hanley.dist_sys.grpc_password_service.proto.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class PasswordServiceServer {
@@ -95,8 +96,15 @@ public class PasswordServiceServer {
 
         @Override
         public void validate(ValidateRequest request, StreamObserver<ValidateResponse> responseObserver) {
-            ValidateResponse validateResponse = ValidateResponse.newBuilder().setValid(true).build();
+            char[] pass = request.getPassword().toCharArray();
+            byte[] salt = request.getHashPair().getSalt().toByteArray();
 
+            byte[] hash = Passwords.hash(pass, salt);
+            byte[] requestHash = request.getHashPair().getHash().toByteArray();
+
+            boolean isValid = Arrays.equals(hash, requestHash);
+
+            ValidateResponse validateResponse = ValidateResponse.newBuilder().setValid(isValid).build();
             responseObserver.onNext(validateResponse);
             responseObserver.onCompleted();
         }
