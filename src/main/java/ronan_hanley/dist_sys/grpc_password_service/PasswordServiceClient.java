@@ -52,7 +52,7 @@ public class PasswordServiceClient {
         ValidateRequest validateRequest = ValidateRequest.newBuilder()
                 .setPassword(pass)
                 .setHashPair(HashPair.newBuilder()
-                    .setHash(salt)
+                    .setHash(hash)
                     .setSalt(salt)
                 ).build();
 

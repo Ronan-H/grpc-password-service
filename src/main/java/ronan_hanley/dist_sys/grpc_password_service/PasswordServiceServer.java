@@ -83,11 +83,11 @@ public class PasswordServiceServer {
             HashResponse hashResponse = HashResponse.newBuilder()
                     .setUserId(request.getUserId())
                     .setHashPair(
-                    HashPair.newBuilder().setHash(
-                            ByteString.copyFrom(hash)
-                    ).setSalt(
-                            ByteString.copyFrom(salt)
-                    ).build()
+                        HashPair.newBuilder().setHash(
+                                ByteString.copyFrom(hash)
+                        ).setSalt(
+                                ByteString.copyFrom(salt)
+                        ).build()
             ).build();
 
             responseObserver.onNext(hashResponse);
@@ -98,11 +98,9 @@ public class PasswordServiceServer {
         public void validate(ValidateRequest request, StreamObserver<ValidateResponse> responseObserver) {
             char[] pass = request.getPassword().toCharArray();
             byte[] salt = request.getHashPair().getSalt().toByteArray();
-
-            byte[] hash = Passwords.hash(pass, salt);
             byte[] requestHash = request.getHashPair().getHash().toByteArray();
 
-            boolean isValid = Arrays.equals(hash, requestHash);
+            boolean isValid = Passwords.isExpectedPassword(pass, salt, requestHash);
 
             ValidateResponse validateResponse = ValidateResponse.newBuilder().setValid(isValid).build();
             responseObserver.onNext(validateResponse);
