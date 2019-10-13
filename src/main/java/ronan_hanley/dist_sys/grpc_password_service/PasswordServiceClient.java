@@ -1,11 +1,10 @@
 package ronan_hanley.dist_sys.grpc_password_service;
 
+import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import ronan_hanley.dist_sys.grpc_password_service.proto.HashRequest;
-import ronan_hanley.dist_sys.grpc_password_service.proto.HashResponse;
-import ronan_hanley.dist_sys.grpc_password_service.proto.PasswordServiceGrpc;
+import ronan_hanley.dist_sys.grpc_password_service.proto.*;
 
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
@@ -32,17 +31,40 @@ public class PasswordServiceClient {
     }
 
     public void testHash(String pass) {
-        logger.info("Will try to hash password...");
+        logger.info(String.format("Testing hashing and validation for password \"%s\"...", pass));
+
         HashRequest hashRequest = HashRequest.newBuilder().setUserId(0).setPassword(pass).build();
         HashResponse hashResponse;
+
         try {
             hashResponse = clientStub.hash(hashRequest);
         } catch (StatusRuntimeException e) {
             logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
             return;
         }
-        logger.info("Hash: " + Base64.getEncoder().encodeToString(hashResponse.getHashPair().getHash().toByteArray()));
-        logger.info("Hash: " + Base64.getEncoder().encodeToString(hashResponse.getHashPair().getSalt().toByteArray()));
+
+        ByteString hash = hashResponse.getHashPair().getHash();
+        ByteString salt = hashResponse.getHashPair().getSalt();
+
+        logger.info("Hash: " + Base64.getEncoder().encodeToString(hash.toByteArray()));
+        logger.info("Salt: " + Base64.getEncoder().encodeToString(salt.toByteArray()));
+
+        ValidateRequest validateRequest = ValidateRequest.newBuilder()
+                .setPassword(pass)
+                .setHashPair(HashPair.newBuilder()
+                    .setHash(salt)
+                    .setSalt(salt)
+                ).build();
+
+        ValidateResponse validateResponse;
+        try {
+            validateResponse = clientStub.validate(validateRequest);
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+            return;
+        }
+
+        logger.info("Valid: " + validateResponse.getValid());
     }
 
     public static void main(String[] args) throws Exception {
