@@ -48,30 +48,6 @@ public class PasswordServiceServer {
         }
     }
 
-    static class TestPasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase {
-        @Override
-        public void hash(HashRequest request, StreamObserver<HashResponse> responseObserver) {
-            HashResponse hashResponse = HashResponse.newBuilder().setHashPair(
-                    HashPair.newBuilder().setHash(
-                            ByteString.copyFrom(new byte[] {1, 2, 3, 4, 5})
-                    ).setSalt(
-                            ByteString.copyFrom(new byte[] {15, 20, 25, 30})
-                ).build()
-            ).build();
-
-            responseObserver.onNext(hashResponse);
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void validate(ValidateRequest request, StreamObserver<ValidateResponse> responseObserver) {
-            ValidateResponse validateResponse = ValidateResponse.newBuilder().setValid(true).build();
-
-            responseObserver.onNext(validateResponse);
-            responseObserver.onCompleted();
-        }
-    }
-
     static class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase {
         @Override
         public void hash(HashRequest request, StreamObserver<HashResponse> responseObserver) {
