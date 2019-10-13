@@ -13,13 +13,6 @@ public class PasswordServiceServer {
     private Server server;
     private static final Logger logger = Logger.getLogger(PasswordServiceServer.class.getName());
 
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        final PasswordServiceServer server = new PasswordServiceServer();
-        server.start();
-        server.blockUntilShutdown();
-    }
-
     private void start() throws IOException {
         /* The port on which the server should run */
         int port = 50051;
@@ -54,7 +47,7 @@ public class PasswordServiceServer {
         }
     }
 
-    static class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase {
+    static class TestPasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase {
         @Override
         public void hash(HashRequest request, StreamObserver<HashResponse> responseObserver) {
             HashResponse hashResponse = HashResponse.newBuilder().setHashPair(
@@ -76,5 +69,42 @@ public class PasswordServiceServer {
             responseObserver.onNext(validateResponse);
             responseObserver.onCompleted();
         }
+    }
+
+    static class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase {
+        @Override
+        public void hash(HashRequest request, StreamObserver<HashResponse> responseObserver) {
+            char[] pass = request.getPassword().toCharArray();
+            byte[] salt = Passwords.getNextSalt();
+
+            byte[] hash = Passwords.hash(pass, salt);
+
+            HashResponse hashResponse = HashResponse.newBuilder()
+                    .setUserId(request.getUserId())
+                    .setHashPair(
+                    HashPair.newBuilder().setHash(
+                            ByteString.copyFrom(hash)
+                    ).setSalt(
+                            ByteString.copyFrom(salt)
+                    ).build()
+            ).build();
+
+            responseObserver.onNext(hashResponse);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void validate(ValidateRequest request, StreamObserver<ValidateResponse> responseObserver) {
+            ValidateResponse validateResponse = ValidateResponse.newBuilder().setValid(true).build();
+
+            responseObserver.onNext(validateResponse);
+            responseObserver.onCompleted();
+        }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        final PasswordServiceServer server = new PasswordServiceServer();
+        server.start();
+        server.blockUntilShutdown();
     }
 }

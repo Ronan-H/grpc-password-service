@@ -17,7 +17,7 @@ public class PasswordServiceClient {
     private final ManagedChannel channel;
     private final PasswordServiceGrpc.PasswordServiceBlockingStub clientStub;
 
-    /** Construct client for accessing HelloWorld server using the existing channel. */
+    /** Construct client for accessing password service server using the existing channel. */
     public PasswordServiceClient(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port)
                 // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
@@ -31,7 +31,6 @@ public class PasswordServiceClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    /** Say hello to server. */
     public void testHash(String pass) {
         logger.info("Will try to hash password...");
         HashRequest hashRequest = HashRequest.newBuilder().setUserId(0).setPassword(pass).build();
