@@ -11,50 +11,56 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class PasswordServiceClient {
-    private static final Logger logger = Logger.getLogger(PasswordServiceClient.class.getName());
+/**
+ * Client for testing the password service server.
+ *
+ * Purely for testing for part 1 for now, will be adjusted for use in part 2.
+ */
+public class TestPasswordServiceClient {
+    private static final Logger logger = Logger.getLogger(TestPasswordServiceClient.class.getName());
     private final ManagedChannel channel;
     private final PasswordServiceGrpc.PasswordServiceBlockingStub clientStub;
 
     /** Construct client for accessing password service server using the existing channel. */
-    public PasswordServiceClient(String host, int port) {
+    public TestPasswordServiceClient(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port)
-                // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
-                // needing certificates.
+                // no TLS encryption
                 .usePlaintext()
                 .build();
         clientStub = PasswordServiceGrpc.newBlockingStub(channel);
     }
 
-    public void shutdown() throws InterruptedException {
-        channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
-    }
-
     public void testHash(String pass) {
         logger.info(String.format("Testing hashing and validation for password \"%s\"...", pass));
 
-        HashRequest hashRequest = HashRequest.newBuilder().setUserId(0).setPassword(pass).build();
-        HashResponse hashResponse;
+        // build hash request
+        HashRequest hashRequest = HashRequest.newBuilder()
+            .setUserId(0)
+            .setPassword(pass)
+        .build();
 
+        HashResponse hashResponse;
         try {
+            // get response
             hashResponse = clientStub.hash(hashRequest);
         } catch (StatusRuntimeException e) {
             logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
             return;
         }
 
+        // print hash and salt from response as Base64 text
         ByteString hash = hashResponse.getHashPair().getHash();
         ByteString salt = hashResponse.getHashPair().getSalt();
-
         logger.info("Hash: " + Base64.getEncoder().encodeToString(hash.toByteArray()));
         logger.info("Salt: " + Base64.getEncoder().encodeToString(salt.toByteArray()));
 
+        // build validation request
         ValidateRequest validateRequest = ValidateRequest.newBuilder()
-                .setPassword(pass)
-                .setHashPair(HashPair.newBuilder()
-                    .setHash(hash)
-                    .setSalt(salt)
-                ).build();
+            .setPassword(pass)
+            .setHashPair(HashPair.newBuilder()
+                .setHash(hash)
+                .setSalt(salt)
+        ).build();
 
         ValidateResponse validateResponse;
         try {
@@ -64,13 +70,18 @@ public class PasswordServiceClient {
             return;
         }
 
+        // print response (should be "true")
         logger.info("Valid: " + validateResponse.getValid());
     }
 
+    public void shutdown() throws InterruptedException {
+        channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+    }
+
     public static void main(String[] args) throws Exception {
-        PasswordServiceClient client = new PasswordServiceClient("localhost", 50051);
+        TestPasswordServiceClient client = new TestPasswordServiceClient("localhost", 50051);
         try {
-            client.testHash("Test");
+            client.testHash("password123");
         } finally {
             client.shutdown();
         }
