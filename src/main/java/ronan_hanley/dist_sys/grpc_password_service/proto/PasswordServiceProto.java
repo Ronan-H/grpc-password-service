@@ -76,7 +76,7 @@ public final class PasswordServiceProto {
     internal_static_HashRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_HashRequest_descriptor,
-        new String[] { "UserId", "Password", });
+        new String[] { "UserId", "Passwords", });
     internal_static_HashResponse_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_HashResponse_fieldAccessorTable = new
@@ -88,7 +88,7 @@ public final class PasswordServiceProto {
     internal_static_ValidateRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ValidateRequest_descriptor,
-        new String[] { "Password", "HashPair", });
+        new String[] { "Passwords", "HashPair", });
     internal_static_ValidateResponse_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_ValidateResponse_fieldAccessorTable = new

@@ -1,5 +1,6 @@
 package ronan_hanley.dist_sys.grpc_password_service;
 
+import com.beust.jcommander.JCommander;
 import com.google.protobuf.ByteString;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -13,11 +14,14 @@ public class PasswordServiceServer {
     private Server server;
     private static final Logger logger = Logger.getLogger(PasswordServiceServer.class.getName());
 
-    private void start() throws IOException {
+    private void start(CLIArgs jcArgs) throws IOException {
+        // create Passwords object using JCommander arguments
+        Passwords passwords = new Passwords(jcArgs.hashIterations, jcArgs.hashKeyLength, jcArgs.saltLength);
+
         // the port on which the server should run
-        int port = 50051;
+        int port = jcArgs.port;
         server = ServerBuilder.forPort(port)
-                .addService(new PasswordServiceImpl())
+                .addService(new PasswordServiceImpl(passwords))
                 .build()
                 .start();
         logger.info("Server started, listening on " + port);
@@ -30,15 +34,21 @@ public class PasswordServiceServer {
     }
 
     static class PasswordServiceImpl extends PasswordServiceGrpc.PasswordServiceImplBase {
+        private Passwords passwords;
+
+        public PasswordServiceImpl(Passwords passwords) {
+            this.passwords = passwords;
+        }
+
         @Override
         public void hash(HashRequest request, StreamObserver<HashResponse> responseObserver) {
             // retrieve password from request
             char[] pass = request.getPassword().toCharArray();
             // generate random salt
-            byte[] salt = Passwords.getNextSalt();
+            byte[] salt = passwords.getNextSalt();
 
             // generate hash using password & salt
-            byte[] hash = Passwords.hash(pass, salt);
+            byte[] hash = passwords.hash(pass, salt);
 
             // build response to send back to the client
             HashResponse hashResponse = HashResponse.newBuilder()
@@ -65,7 +75,7 @@ public class PasswordServiceServer {
             byte[] requestHash = request.getHashPair().getHash().toByteArray();
 
             // perform validation
-            boolean isValid = Passwords.isExpectedPassword(pass, salt, requestHash);
+            boolean isValid = passwords.isExpectedPassword(pass, salt, requestHash);
 
             // build response
             ValidateResponse validateResponse = ValidateResponse.newBuilder().setValid(isValid).build();
@@ -91,9 +101,28 @@ public class PasswordServiceServer {
         }
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] rawArgs) throws IOException, InterruptedException {
+        // use JCommander to parse command line arguments
+        CLIArgs jcArgs = new CLIArgs();
+
+        JCommander jc = JCommander.newBuilder()
+            .addObject(jcArgs)
+            .build();
+
+        jc.parse(rawArgs);
+        jc.setProgramName("gRPC Passwords Service Server");
+
+        // log command line arguments for debugging purposes
+        StringBuilder toLog = new StringBuilder();
+        toLog.append("Starting server with arguments...\n");
+        toLog.append("\tPort = " + jcArgs.port).append("\n");
+        toLog.append("\tHash iterations = " + jcArgs.hashIterations).append("\n");
+        toLog.append("\tHash key length = " + jcArgs.hashKeyLength).append("\n");
+        toLog.append("\tSalt length = " + jcArgs.saltLength).append("\n");
+        logger.info(toLog.toString());
+
         final PasswordServiceServer server = new PasswordServiceServer();
-        server.start();
+        server.start(jcArgs);
         server.blockUntilShutdown();
     }
 }
