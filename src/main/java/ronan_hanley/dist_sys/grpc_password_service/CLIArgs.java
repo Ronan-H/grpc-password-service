@@ -5,7 +5,7 @@ import com.beust.jcommander.Parameter;
 public class CLIArgs {
     @Parameter(
             names = {"--port", "-p"},
-            description = "Port to host the server on (1000-65535)"
+            description = "Port to host the server on"
     )
     Integer port = 50051;
 

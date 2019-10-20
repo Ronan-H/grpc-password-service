@@ -1,0 +1,14 @@
+Usage: java -jar grpc-password-service.jar [options]
+  Options:
+    --hash-iterations, -hi
+      Number of iterations to use for hashing
+      Default: 10000
+    --key-length, -kl
+      Key length to use for hashing
+      Default: 256
+    --port, -p
+      Port to host the server on
+      Default: 50051
+    --salt-length, -sl
+      Length (number of bytes) of randomly generated salts
+      Default: 32
