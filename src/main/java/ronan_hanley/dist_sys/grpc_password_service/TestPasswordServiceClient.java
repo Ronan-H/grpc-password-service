@@ -79,7 +79,7 @@ public class TestPasswordServiceClient {
     }
 
     public static void main(String[] args) throws Exception {
-        TestPasswordServiceClient client = new TestPasswordServiceClient("localhost", 8080);
+        TestPasswordServiceClient client = new TestPasswordServiceClient("localhost", 50051);
         try {
             client.testHash("password123");
         } finally {

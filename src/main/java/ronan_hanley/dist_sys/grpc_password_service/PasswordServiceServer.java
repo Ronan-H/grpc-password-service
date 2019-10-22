@@ -112,13 +112,28 @@ public class PasswordServiceServer {
         jc.parse(rawArgs);
         jc.setProgramName("gRPC Passwords Service Server");
 
+        if (jcArgs.printUsage) {
+            // print command line argument usage and exit
+            StringBuilder rawUsage = new StringBuilder();
+            // store usage instructions in a StringBuilder
+            jc.usage(rawUsage);
+            // adjust instructions since this will be run from a jar
+            String usage = rawUsage.toString().replace(
+                    "gRPC Passwords Service Server", "java -jar grpc-password-service.jar");
+            System.out.println(usage);
+            System.out.println("(since you specified --usage/-u, all other arguments are ignored)");
+            System.out.println("Exiting...");
+            System.exit(0);
+        }
+
         // log command line arguments for debugging purposes
         StringBuilder toLog = new StringBuilder();
         toLog.append("Starting server with arguments...\n");
         toLog.append("\tPort = " + jcArgs.port).append("\n");
         toLog.append("\tHash iterations = " + jcArgs.hashIterations).append("\n");
         toLog.append("\tHash key length = " + jcArgs.hashKeyLength).append("\n");
-        toLog.append("\tSalt length = " + jcArgs.saltLength).append("\n");
+        toLog.append("\tSalt length = " + jcArgs.saltLength).append("\n\n");
+        toLog.append("\t(specify --usage or -u for usage instructions)").append("\n");
         logger.info(toLog.toString());
 
         final PasswordServiceServer server = new PasswordServiceServer();

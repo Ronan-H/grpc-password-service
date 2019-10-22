@@ -1,6 +1,6 @@
 Usage: java -jar grpc-password-service.jar [options]
   Options:
-  	--port, -p
+    --port, -p
       Port to host the server on
       Default: 50051
     --hash-iterations, -hi
@@ -12,6 +12,9 @@ Usage: java -jar grpc-password-service.jar [options]
     --salt-length, -sl
       Length (number of bytes) of randomly generated salts
       Default: 32
+    --usage, -u
+      Print usage instructions and exit
+      Default: false
 
 Example:
   java -jar grpc-password-service.jar --port 8080 -hi 15000 -kl 512 -sl 64
